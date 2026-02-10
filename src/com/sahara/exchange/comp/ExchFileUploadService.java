@@ -46,6 +46,7 @@ public class ExchFileUploadService extends ServiceLifecycle {
   public List<String> getIds(ServiceData serviceData, List<String> controlList) {
       DataAccess da = new DataAccess(this);
 
+      System.out.println("Start of exchange company service get ids....");
 
 
       EbFileUploadTypeRecord eBRecord = new EbFileUploadTypeRecord(
@@ -128,6 +129,7 @@ public class ExchFileUploadService extends ServiceLifecycle {
   public void postUpdateRequest(String csvFilePath, ServiceData serviceData, String controlItem,
           List<TransactionData> transactionData, List<TStructure> records) {
 
+      System.out.println("Start of exchange company service main....");
       String paramCreditAccount ="";
 
       DataAccess da = new DataAccess(this);
@@ -183,13 +185,22 @@ public class ExchFileUploadService extends ServiceLifecycle {
 
               // Retrieve the debit account and currency
               String debitCurrency ="";
-              if (! (paramCreditAccount.isEmpty()) )
+              if (! (paramCreditAccount.isEmpty()) ) {
                   
-              {AccountRecord acRecord = new AccountRecord(da.getRecord("ACCOUNT", fileDebitAccount));
-               debitCurrency = acRecord.getCurrency().getValue();
+                  try {
+                      AccountRecord acRecord = new AccountRecord(da.getRecord("ACCOUNT", fileDebitAccount));
+                      debitCurrency = acRecord.getCurrency().getValue();
+                } catch (Exception e) {
+                    System.out.println("Account: "+ fileDebitAccount +" isn't exist");
+                    continue;
+                }
+
               }
               else 
-              {System.out.println("debit account not exists on the param template");}
+              {
+                  System.out.println("debit account not exists on the param template");
+                  continue;
+              }
               
               // Create and populate a FundsTransferRecord
               FundsTransferRecord ft = new FundsTransferRecord(this);
@@ -202,9 +213,10 @@ public class ExchFileUploadService extends ServiceLifecycle {
               try {
                   ft.getLocalRefField("MBSC.ATMUP.FILENAME").set(csvFileName);
                   ft.getLocalRefField("MBSC.ATMUP.DATE").set(processingDate);
+                  System.out.println("ft: "+ ft);
               } catch (IllegalArgumentException e) {
                   System.out.println("Error setting local fields: " + e.getMessage());
-                 // throw new Error("Error setting local fields: " + e.getMessage());
+                 continue;
               }
 
               // Create transaction data
